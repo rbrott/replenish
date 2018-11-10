@@ -1,0 +1,39 @@
+# Harvard water fill-up locations
+# Format: latitude,longitude,type
+# Sever Quadrangle
+42.374316,-71.115498,public
+# Widener Library
+42.373631,-71.116657,public
+# Canaday Hall
+42.375331,-71.116028,private
+# Memorial Hall
+42.375713,-71.114750,public
+# Lamont Library
+42.372714,-71.115387,public
+# Wigglesworth Hall
+42.372749,-71.116009,private
+# Department of English
+42.372593,-71.114506,private
+# Thayer Hall
+42.375099,-71.116655,private
+42.374937,-71.116707,private
+# Weld Hall
+42.374041,-71.117074,private
+42.373863,-71.117190,private
+# Holworthy Hall
+42.375484,-71.117048,private
+# Stoughton Hall
+42.375346,-71.117761,private
+# Mower Hall
+42.375439,-71.118221,private
+# Hollis Hall
+42.374934,-71.117863,private
+# Massachusetts Hall
+42.374437,-71.118315,private
+# Straus Hall
+42.374108,-71.118606,private
+# Matthews Hall
+42.374084,-71.118068,private
+42.373945,-71.118171,private
+# Cambridge Radio
+42.372466,-71.113476

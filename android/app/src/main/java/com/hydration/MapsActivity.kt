@@ -37,6 +37,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         for (fillStation in fillStationManager.fillStations) {
             map.addMarker(MarkerOptions().position(fillStation.location))
         }
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(fillStationManager.fillStations[0].location, 16.0f))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(fillStationManager.fillStations[0].location, 16.5f))
     }
 }
