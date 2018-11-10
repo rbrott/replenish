@@ -6,6 +6,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MarkerOptions
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -33,9 +34,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
+        val publicIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+        val privateIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
+
         val fillStationManager = FillStationManager(this)
         for (fillStation in fillStationManager.fillStations) {
-            map.addMarker(MarkerOptions().position(fillStation.location))
+            map.addMarker(
+                MarkerOptions()
+                    .position(fillStation.location)
+                    .icon(when (fillStation.type) {
+                        FillStationType.PUBLIC -> publicIcon
+                        FillStationType.PRIVATE -> privateIcon
+                    })
+            )
         }
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(fillStationManager.fillStations[0].location, 16.5f))
     }

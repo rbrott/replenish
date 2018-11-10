@@ -17,7 +17,12 @@ class FillStationManager(context: Context) {
                     val name = "${filename.split(".")[0]}-$i"
                     val lat = row[0].toDouble()
                     val lng = row[1].toDouble()
-                    FillStation(name, LatLng(lat, lng))
+                    val type = when (row[2]) {
+                        "public" -> FillStationType.PUBLIC
+                        "private" -> FillStationType.PRIVATE
+                        else -> FillStationType.PRIVATE
+                    }
+                    FillStation(name, LatLng(lat, lng), type)
                 }
             }.flatten()
     }
