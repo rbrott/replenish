@@ -1,25 +1,31 @@
 package com.replenish;
 
-// TODO
-const val BASE_URL = ""
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.jackson.JacksonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+const val DOMAIN = "https://rbrott.lib.id/"
+const val BASE = "replenish@dev/"
 
 // TODO fill in retrofit stuff once the backend is more finalized
 interface StdLibClient {
+    data class HealthInformation(val heartRate: Double)
+
     companion object {
         fun createClient(): StdLibClient {
-//            val retrofit = Retrofit.Builder()
-//                .baseUrl(BASE_URL)
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build()
-//            return retrofit.create(StdLibClient::class.java)
-            return object : StdLibClient {
-                override fun getDehydrationLevel(): Double {
-                    return 5.0
-                }
-
-            }
+            val mapper = ObjectMapper().registerKotlinModule()
+            val retrofit = Retrofit.Builder()
+                .baseUrl(DOMAIN)
+                .addConverterFactory(JacksonConverterFactory.create(mapper))
+                .build()
+            return retrofit.create(StdLibClient::class.java)
         }
     }
 
-    fun getDehydrationLevel(): Double
+    @GET(BASE)
+    fun getHealthInformation(@Query("accessToken") accessToken: String): Call<HealthInformation>
 }

@@ -23,7 +23,6 @@ class LoginActivity : AppCompatActivity(), AuthenticationHandler {
     override fun onAuthFinished(authenticationResult: AuthenticationResult) {
         if (authenticationResult.isSuccessful) {
             val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("accessToken", authenticationResult.accessToken.accessToken)
             startActivity(intent)
         } else {
             AuthenticationManager.logout(this)

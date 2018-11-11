@@ -33,6 +33,9 @@ import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.water_dialog.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -40,11 +43,12 @@ const val LOCATION_PERMISSION_REQUEST_CODE = 1
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var campusManager: CampusManager
-    private lateinit var campus: Campus
-    private lateinit var currentLocation: LatLng
-    private lateinit var map: GoogleMap
-    private var mapReady = false
-    private var locationReady = false
+    private lateinit var stdLibClient: StdLibClient
+    private lateinit var accessToken: String
+
+    private var campus: Campus? = null
+    private var currentLocation: LatLng? = null
+    private var map: GoogleMap? = null
 
     companion object {
         fun getDirectionsIntent(destination: LatLng): Intent {
@@ -67,9 +71,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         campusManager = CampusManager(this)
 
         directionsButton.setOnClickListener {
-            if (campus != null) {
-                startDirections(campus.getClosestFillStation(currentLocation).location)
-            }
+            val currentLocation = currentLocation ?: LatLng(0.0, 0.0)
+            val fillLocation = campus?.getClosestFillStation(currentLocation)?.location ?: LatLng(0.0, 0.0)
+            startDirections(fillLocation)
         }
 
         NotificationService.setAlarm(this)
@@ -86,9 +90,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             openWaterDialog()
         }
 
-        val accessToken = intent.getStringExtra("accessToken")
+        accessToken = AuthenticationManager.getCurrentAccessToken().accessToken
+        stdLibClient = StdLibClient.createClient()
         Log.i("Replenish", accessToken)
-        // TODO: somehow pass this to the Fitbit integration/API
+        sync()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -136,10 +141,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        mapReady = true
 
         // we have our own direction functionality
-        map.setOnMarkerClickListener { true }
+        map!!.setOnMarkerClickListener { true }
 
         enableMyLocation()
 
@@ -153,10 +157,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 this, LOCATION_PERMISSION_REQUEST_CODE,
                 Manifest.permission.ACCESS_FINE_LOCATION, true
             )
-        } else if (mapReady) {
-            // Access to the location has been granted to the app.
-            map.isMyLocationEnabled = true
         }
+        // Access to the location has been granted to the app.
+        map?.isMyLocationEnabled = true
     }
 
     private fun findCurrentLocation() {
@@ -165,8 +168,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 .addOnSuccessListener { location: Location? ->
                     if (location != null) {
                         currentLocation = LatLng(location.latitude, location.longitude)
-                        campus = campusManager.getClosestCampus(currentLocation)
-                        locationReady = true
+                        campus = campusManager.getClosestCampus(currentLocation!!)
 
                         addMarkers()
                     }
@@ -175,29 +177,45 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addMarkers() {
-        if (mapReady && locationReady) {
-            val publicIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-            val privateIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
+        val publicIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+        val privateIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
 
-            for (fillStation in campus.fillStations) {
-                map.addMarker(
-                    MarkerOptions()
-                        .position(fillStation.location)
-                        .icon(
-                            when (fillStation.type) {
-                                FillStationType.PUBLIC -> publicIcon
-                                FillStationType.PRIVATE -> privateIcon
-                            }
-                        )
-                )
-            }
-
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(campus.center, 16.0f))
+        val fillStations = campus?.fillStations ?: emptyList()
+        for (fillStation in fillStations) {
+            map?.addMarker(
+                MarkerOptions()
+                    .position(fillStation.location)
+                    .icon(
+                        when (fillStation.type) {
+                            FillStationType.PUBLIC -> publicIcon
+                            FillStationType.PRIVATE -> privateIcon
+                        }
+                    )
+            )
         }
+
+        val campusCenter = campus?.center ?: LatLng(0.0, 0.0)
+        map?.moveCamera(CameraUpdateFactory.newLatLngZoom(campusCenter, 16.0f))
     }
 
     private fun startDirections(destination: LatLng) {
         startActivity(getDirectionsIntent(destination))
+    }
+
+    private fun sync() {
+        stdLibClient.getHealthInformation(accessToken).enqueue(object : Callback<StdLibClient.HealthInformation> {
+            override fun onFailure(call: Call<StdLibClient.HealthInformation>, t: Throwable) {
+
+            }
+
+            override fun onResponse(
+                call: Call<StdLibClient.HealthInformation>,
+                response: Response<StdLibClient.HealthInformation>
+            ) {
+                // TODO: update UI
+                Log.i("Replenish", "heart rate: " + response.body()?.heartRate)
+            }
+        })
     }
 
     private fun openWaterDialog() {

@@ -70,8 +70,7 @@ class FitbitAuthApplication : Application() {
                     .setEncryptionKey(SECURE_KEY)
                     .setTokenExpiresIn(2592000L) // 30 days
                     .setBeforeLoginActivity(Intent(context, mainActivityClass))
-                    .addRequiredScopes(Scope.profile, Scope.settings)
-                    .addOptionalScopes(Scope.activity, Scope.weight)
+                    .addRequiredScopes(Scope.profile, Scope.settings, Scope.activity, Scope.weight, Scope.heartrate)
                     .setLogoutOnAuthFailure(true)
                     .build()
 

@@ -33,8 +33,8 @@ class NotificationService : Service() {
         // send a notification if necessary
         val apiClient = StdLibClient.createClient()
         // TODO
-        if (apiClient.getDehydrationLevel() < 10.0) {
-            val notifIntent = Intent(this, MainActivity::class.java)
+        if (true) {
+            val notifIntent = Intent(this, LoginActivity::class.java)
             val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, notifIntent, 0)
 
             createNotificationChannel()
