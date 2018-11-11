@@ -1,6 +1,7 @@
 package com.replenish
 
 import android.Manifest
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -9,11 +10,10 @@ import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import com.fitbit.authentication.AuthenticationHandler
-import com.fitbit.authentication.AuthenticationManager
-import com.fitbit.authentication.AuthenticationResult
+import android.widget.SeekBar
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -25,11 +25,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.water_dialog.*
 
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, AuthenticationHandler {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var campusManager: CampusManager
     private lateinit var campus: Campus
@@ -67,21 +68,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, AuthenticationHand
             findCurrentLocation()
         }
 
-        AuthenticationManager.login(this)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data);
-        AuthenticationManager.onActivityResult(requestCode, resultCode, data, this as AuthenticationHandler)
-    }
-
-    override fun onAuthFinished(authenticationResult: AuthenticationResult) {
-        if (authenticationResult.isSuccessful) {
-            Log.i("Replenish", "auth successful")
-            //WOOT WOOT!! It worked!
-        } else {
-            //Uh oh... errors...
+        water_input_button.setOnClickListener {
+            openWaterDialog()
         }
+
+        val accessToken = intent.getStringExtra("accessToken")
+        Log.i("Replenish", "Access token: $accessToken")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -179,5 +171,41 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, AuthenticationHand
         val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
         mapIntent.setPackage("com.google.android.apps.maps")
         startActivity(mapIntent)
+    }
+
+    private fun openWaterDialog() {
+        val dialog = Dialog(this)
+        val inflater = getSystemService(LayoutInflater::class.java)
+        val layout = inflater.inflate(R.layout.water_dialog, water_dialog)!!
+
+        water_seekbar.progress = 0
+        water_seekbar.keyProgressIncrement = 2
+        water_seekbar.max = 24
+        water_seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                waterTextView.text = "${progress}oz"
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+        })
+
+        dialog_ok.setOnClickListener {
+            // TODO
+            dialog.hide()
+        }
+
+        dialog_cancel.setOnClickListener {
+            dialog.hide()
+        }
+
+        dialog.setContentView(layout)
+        dialog.show()
     }
 }

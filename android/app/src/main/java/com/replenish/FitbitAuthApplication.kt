@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import com.fitbit.authentication.*
-import com.fitbit.authentication.Scope.activity
 
 /**
  * Created by jboggess on 9/28/16.
@@ -64,19 +63,16 @@ class FitbitAuthApplication : Application() {
                 val clientId = bundle.getString("com.fitbit.CLIENT_ID")
                 val redirectUrl = bundle.getString("com.fitbit.REDIRECT_URL")
 
-
                 val clientCredentials = ClientCredentials(clientId, CLIENT_SECRET, redirectUrl)
 
                 return AuthenticationConfigurationBuilder()
-
                     .setClientCredentials(clientCredentials)
                     .setEncryptionKey(SECURE_KEY)
                     .setTokenExpiresIn(2592000L) // 30 days
                     .setBeforeLoginActivity(Intent(context, mainActivityClass))
                     .addRequiredScopes(Scope.profile, Scope.settings)
-                    .addOptionalScopes(activity, Scope.weight)
+                    .addOptionalScopes(Scope.activity, Scope.weight)
                     .setLogoutOnAuthFailure(true)
-
                     .build()
 
             } catch (e: Exception) {

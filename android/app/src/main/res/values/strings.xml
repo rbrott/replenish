@@ -9,4 +9,5 @@
     <string name="permission_required_toast">Location permission is required for this demo.</string>
     <string name="cupsConsumedLabel">Cups Consumed</string>
     <string name="cupsToDrinkLabel">Cups To Drink</string>
+    <string name="title_activity_login">LoginActivity</string>
 </resources>
