@@ -3,6 +3,16 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.replenish.MainActivity">
     <item
+        android:id="@+id/action_refresh"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/refresh"
+        android:title="@string/menu_refresh" />
+    <item
+        android:id="@+id/action_add_water"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/water"
+        android:title="@string/menu_add_water" />
+    <item
         android:id="@+id/action_reset"
         app:showAsAction="never"
         android:title="@string/menu_reset" />

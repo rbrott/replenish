@@ -11,9 +11,7 @@ import retrofit2.http.Query
 const val DOMAIN = "https://rbrott.lib.id/"
 const val BASE = "replenish@dev/"
 
-// TODO fill in retrofit stuff once the backend is more finalized
 interface StdLibClient {
-    data class HealthInformation(val heartRate: Double)
 
     companion object {
         fun createClient(): StdLibClient {
@@ -27,5 +25,5 @@ interface StdLibClient {
     }
 
     @GET(BASE)
-    fun getHealthInformation(@Query("accessToken") accessToken: String): Call<HealthInformation>
+    fun getHydrationInfo(@Query("accessToken") accessToken: String): Call<HydrationInfo>
 }

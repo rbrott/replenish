@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -33,18 +32,15 @@ import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.water_dialog.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var campusManager: CampusManager
-    private lateinit var stdLibClient: StdLibClient
-    private lateinit var accessToken: String
+    private lateinit var waterMonitor: WaterMonitor
 
     private var campus: Campus? = null
     private var currentLocation: LatLng? = null
@@ -86,13 +82,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             findCurrentLocation()
         }
 
-        waterInputButton.setOnClickListener {
-            openWaterDialog()
-        }
+        waterMonitor = WaterMonitor(this)
+    }
 
-        accessToken = AuthenticationManager.getCurrentAccessToken().accessToken
-        stdLibClient = StdLibClient.createClient()
-        Log.i("Replenish", accessToken)
+    override fun onStart() {
+        super.onStart()
+
         sync()
     }
 
@@ -117,8 +112,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
+        when (item.itemId) {
             R.id.action_reset -> {
+                waterMonitor.clear()
                 val alarmManager = getSystemService(AlarmManager::class.java)
                 val intent = Intent(this, LoginActivity::class.java).let {
                     PendingIntent.getActivity(this, 0, it, 0)
@@ -133,10 +129,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         finish()
                     }
                 })
-                true
             }
-            else -> super.onOptionsItemSelected(item)
+            R.id.action_refresh -> {
+                sync()
+            }
+            R.id.action_add_water -> {
+                openWaterDialog()
+            }
         }
+
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -203,19 +205,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun sync() {
-        stdLibClient.getHealthInformation(accessToken).enqueue(object : Callback<StdLibClient.HealthInformation> {
-            override fun onFailure(call: Call<StdLibClient.HealthInformation>, t: Throwable) {
-
-            }
-
-            override fun onResponse(
-                call: Call<StdLibClient.HealthInformation>,
-                response: Response<StdLibClient.HealthInformation>
-            ) {
-                // TODO: update UI
-                Log.i("Replenish", "heart rate: " + response.body()?.heartRate)
-            }
-        })
+        waterMonitor.update {
+            cupsConsumedTextView.text = "${waterMonitor.getWaterConsumed().toInt() / 8}"
+            cupsToDrinkTextView.text = "${waterMonitor.getWaterNeeded().toInt() / 8}"
+        }
     }
 
     private fun openWaterDialog() {
@@ -245,7 +238,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         })
 
         layout.findViewById<Button>(R.id.waterDialogConfirm).setOnClickListener {
-            // TODO
+            waterMonitor.recordWaterConsumption(seekbar.progress.toFloat())
+            sync()
             dialog.hide()
         }
 

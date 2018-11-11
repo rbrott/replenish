@@ -31,24 +31,27 @@ class NotificationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // send a notification if necessary
-        val apiClient = StdLibClient.createClient()
-        // TODO
-        if (true) {
-            val notifIntent = Intent(this, LoginActivity::class.java)
-            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, notifIntent, 0)
+        val waterMonitor = WaterMonitor(this)
+        waterMonitor.update {
+            if (waterMonitor.shouldNotify()) {
+                val notifIntent = Intent(this, LoginActivity::class.java)
+                val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, notifIntent, 0)
 
-            createNotificationChannel()
+                createNotificationChannel()
 
-            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.water)
-                .setContentTitle("Drink Up!")
-                .setContentText("Based on your recent activity, we recommend you drink a glass of water to rehydrate.")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent)
-                .build()
+                val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.water)
+                    .setContentTitle("Drink Up!")
+                    .setContentText("Based on your recent activity, we recommend you drink a cup of water to rehydrate.")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentIntent(pendingIntent)
+                    .build()
 
-            with(NotificationManagerCompat.from(this)) {
-                notify(0, notification)
+                with(NotificationManagerCompat.from(this)) {
+                    notify(0, notification)
+                }
+
+                waterMonitor.recordWaterNotified(8.0f)
             }
         }
 
