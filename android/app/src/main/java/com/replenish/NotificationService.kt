@@ -1,4 +1,4 @@
-package com.hydration
+package com.replenish
 
 import android.app.*
 import android.content.Context
@@ -32,7 +32,7 @@ class NotificationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // send a notification if necessary
-        Log.i("Hydration", "onStartCommand()")
+        Log.i("Replenish", "onStartCommand()")
         val apiClient = StdLibClient.createClient()
         // TODO
         if (apiClient.getDehydrationLevel() < 10.0) {

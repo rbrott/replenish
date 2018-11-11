@@ -1,4 +1,4 @@
-package com.hydration
+package com.replenish
 
 import android.content.BroadcastReceiver
 import android.content.Context

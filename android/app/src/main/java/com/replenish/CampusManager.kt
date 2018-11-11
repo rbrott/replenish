@@ -1,4 +1,4 @@
-package com.hydration
+package com.replenish
 
 import android.content.Context
 import com.google.android.gms.maps.model.LatLng

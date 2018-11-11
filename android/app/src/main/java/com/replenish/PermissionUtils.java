@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hydration;
+package com.replenish;
 
 import android.Manifest;
 import android.app.AlertDialog;

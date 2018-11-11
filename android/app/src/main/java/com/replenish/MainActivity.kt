@@ -1,4 +1,4 @@
-package com.hydration
+package com.replenish
 
 import android.Manifest
 import android.content.Intent

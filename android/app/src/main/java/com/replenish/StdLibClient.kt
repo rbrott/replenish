@@ -1,4 +1,4 @@
-package com.hydration;
+package com.replenish;
 
 // TODO
 const val BASE_URL = ""
