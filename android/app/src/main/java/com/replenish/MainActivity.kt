@@ -13,7 +13,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
 import android.widget.SeekBar
+import android.widget.TextView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -180,12 +182,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val inflater = getSystemService(LayoutInflater::class.java)
         val layout = inflater.inflate(R.layout.water_dialog, water_dialog)!!
 
-        water_seekbar.progress = 0
-        water_seekbar.keyProgressIncrement = 2
-        water_seekbar.max = 24
-        water_seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        val textView = layout.findViewById<TextView>(R.id.waterTextView)
+
+        val seekbar = layout.findViewById<SeekBar>(R.id.water_seekbar)
+        seekbar.progress = 0
+        seekbar.keyProgressIncrement = 2
+        seekbar.max = 24
+        seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                waterTextView.text = "${progress}oz"
+                textView.text = "${progress}oz"
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -198,12 +203,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         })
 
-        dialog_ok.setOnClickListener {
+        layout.findViewById<Button>(R.id.dialog_ok).setOnClickListener {
             // TODO
             dialog.hide()
         }
 
-        dialog_cancel.setOnClickListener {
+        layout.findViewById<Button>(R.id.dialog_cancel).setOnClickListener {
             dialog.hide()
         }
 
