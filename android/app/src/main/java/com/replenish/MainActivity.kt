@@ -107,6 +107,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         map = googleMap
         mapReady = true
 
+        map.setOnMarkerClickListener { true }
+
         enableMyLocation()
 
         initMap()
