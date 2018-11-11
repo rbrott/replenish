@@ -206,8 +206,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun sync() {
         waterMonitor.update {
-            cupsConsumedTextView.text = "${waterMonitor.getWaterConsumed().toInt() / 8}"
-            cupsToDrinkTextView.text = "${waterMonitor.getWaterNeeded().toInt() / 8}"
+            val cupsConsumed = waterMonitor.getWaterConsumed().toInt() / 8
+            val cupsToDrink = waterMonitor.getWaterNeeded().toInt() / 8
+
+            cupsConsumedTextView.text = cupsConsumed.toString()
+            cupsToDrinkTextView.text = cupsToDrink.toString()
+
+            if (cupsConsumed == 1) {
+                cupsConsumedLabel.text = "Cup Consumed"
+            } else {
+                cupsConsumedLabel.text = "Cups Consumed"
+            }
+
+            if (cupsToDrink == 1) {
+                cupsToDrinkLabel.text = "Cup To Drink"
+            } else {
+                cupsToDrinkLabel.text = "Cups To Drink"
+            }
         }
     }
 
