@@ -1,20 +1,26 @@
 package com.replenish
 
 import android.Manifest
+import android.app.AlarmManager
 import android.app.Dialog
+import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import com.fitbit.authentication.AuthenticationManager
+import com.fitbit.authentication.LogoutTaskCompletionHandler
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -62,7 +68,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         directionsButton.setOnClickListener {
             if (campus != null) {
-                startDirections(campus.fillStations.minBy { currentLocation.distanceTo(it.location) }!!.location)
+                startDirections(campus.getClosestFillStation(currentLocation).location)
             }
         }
 
@@ -70,20 +76,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
-                Manifest.permission.ACCESS_FINE_LOCATION, true);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE, Manifest.permission.ACCESS_FINE_LOCATION, true)
         } else {
             findCurrentLocation()
         }
 
-        water_input_button.setOnClickListener {
+        waterInputButton.setOnClickListener {
             openWaterDialog()
         }
 
         val accessToken = intent.getStringExtra("accessToken")
-        Log.i("Replenish", "Access token: $accessToken")
+        Log.i("Replenish", accessToken)
+        // TODO: somehow pass this to the Fitbit integration/API
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -103,33 +108,46 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         return true
     }
 
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        return when (item.itemId) {
-//            R.id.action_refresh -> true
-//            else -> super.onOptionsItemSelected(item)
-//        }
-//    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return when (item.itemId) {
+            R.id.action_reset -> {
+                val alarmManager = getSystemService(AlarmManager::class.java)
+                val intent = Intent(this, LoginActivity::class.java).let {
+                    PendingIntent.getActivity(this, 0, it, 0)
+                }
+                alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 2000, intent)
+                AuthenticationManager.logout(this, object : LogoutTaskCompletionHandler {
+                    override fun logoutSuccess() {
+                        finish()
+                    }
+
+                    override fun logoutError(message: String?) {
+                        finish()
+                    }
+                })
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         mapReady = true
 
+        // we have our own direction functionality
         map.setOnMarkerClickListener { true }
 
         enableMyLocation()
 
-        initMap()
+        addMarkers()
     }
 
     private fun enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Permission to access the location is missing.
             PermissionUtils.requestPermission(
                 this, LOCATION_PERMISSION_REQUEST_CODE,
@@ -142,8 +160,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun findCurrentLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location: Location? ->
                     if (location != null) {
@@ -151,13 +168,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         campus = campusManager.getClosestCampus(currentLocation)
                         locationReady = true
 
-                        initMap()
+                        addMarkers()
                     }
                 }
         }
     }
 
-    private fun initMap() {
+    private fun addMarkers() {
         if (mapReady && locationReady) {
             val publicIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
             val privateIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
@@ -174,6 +191,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         )
                 )
             }
+
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(campus.center, 16.0f))
         }
     }
@@ -189,7 +207,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         val textView = layout.findViewById<TextView>(R.id.waterTextView)
 
-        val seekbar = layout.findViewById<SeekBar>(R.id.water_seekbar)
+        val seekbar = layout.findViewById<SeekBar>(R.id.waterSeekBar)
         seekbar.progress = 0
         seekbar.keyProgressIncrement = 2
         seekbar.max = 24
@@ -208,12 +226,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         })
 
-        layout.findViewById<Button>(R.id.dialog_ok).setOnClickListener {
+        layout.findViewById<Button>(R.id.waterDialogConfirm).setOnClickListener {
             // TODO
             dialog.hide()
         }
 
-        layout.findViewById<Button>(R.id.dialog_cancel).setOnClickListener {
+        layout.findViewById<Button>(R.id.waterDialogCancel).setOnClickListener {
             dialog.hide()
         }
 

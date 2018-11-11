@@ -26,7 +26,8 @@ class LoginActivity : AppCompatActivity(), AuthenticationHandler {
             intent.putExtra("accessToken", authenticationResult.accessToken.accessToken)
             startActivity(intent)
         } else {
-            //Uh oh... errors...
+            AuthenticationManager.logout(this)
         }
+        finish()
     }
 }

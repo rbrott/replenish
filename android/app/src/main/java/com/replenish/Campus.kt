@@ -15,6 +15,8 @@ data class Campus(val fillStations: List<FillStation>) {
         }
         center = LatLng(lat / fillStations.size, lng / fillStations.size)
     }
+
+    fun getClosestFillStation(location: LatLng) = fillStations.minBy { it.location.distanceTo(location) }!!
 }
 
 fun LatLng.distanceTo(other: LatLng): Double {

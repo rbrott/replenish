@@ -8,9 +8,8 @@ import android.os.IBinder
 import android.os.SystemClock
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
-import android.util.Log
 
-const val CHANNEL_ID = "HydrateReminders"
+const val CHANNEL_ID = "HydrationReminders"
 const val NOTIFICATION_INTERVAL_MS = 15000L // 5 * 60 * 1000L
 
 class NotificationService : Service() {
@@ -32,7 +31,6 @@ class NotificationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // send a notification if necessary
-        Log.i("Replenish", "onStartCommand()")
         val apiClient = StdLibClient.createClient()
         // TODO
         if (apiClient.getDehydrationLevel() < 10.0) {
