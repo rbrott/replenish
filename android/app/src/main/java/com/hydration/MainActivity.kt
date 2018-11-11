@@ -1,26 +1,79 @@
 package com.hydration
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.net.Uri
 import android.os.Bundle
-import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 
 
-class MainActivity : AppCompatActivity() {
+const val LOCATION_PERMISSION_REQUEST_CODE = 1
+
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var campusManager: CampusManager
+    private lateinit var campus: Campus
+    private lateinit var currentLocation: LatLng
+    private lateinit var map: GoogleMap
+    private var mapReady = false
+    private var locationReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
+        campusManager = CampusManager(this)
+
+        directionsButton.setOnClickListener {
+            if (campus != null) {
+                startDirections(campus.fillStations.minBy { currentLocation.distanceTo(it.location) }!!.location)
+            }
         }
 
         NotificationService.setAlarm(this)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                Manifest.permission.ACCESS_FINE_LOCATION, true);
+        } else {
+            findCurrentLocation()
+        }
     }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
+            return
+        }
+
+        if (PermissionUtils.isPermissionGranted(permissions, grantResults, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            findCurrentLocation()
+        }
+    }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -36,5 +89,75 @@ class MainActivity : AppCompatActivity() {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        map = googleMap
+        mapReady = true
+
+        enableMyLocation()
+
+        initMap()
+    }
+
+    private fun enableMyLocation() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(
+                this, LOCATION_PERMISSION_REQUEST_CODE,
+                Manifest.permission.ACCESS_FINE_LOCATION, true
+            )
+        } else if (mapReady) {
+            // Access to the location has been granted to the app.
+            map.isMyLocationEnabled = true
+        }
+    }
+
+    private fun findCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location: Location? ->
+                    if (location != null) {
+                        currentLocation = LatLng(location.latitude, location.longitude)
+                        campus = campusManager.getClosestCampus(currentLocation)
+                        locationReady = true
+
+                        initMap()
+                    }
+                }
+        }
+    }
+
+    private fun initMap() {
+        if (mapReady && locationReady) {
+            val publicIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+            val privateIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
+
+            for (fillStation in campus.fillStations) {
+                map.addMarker(
+                    MarkerOptions()
+                        .position(fillStation.location)
+                        .icon(
+                            when (fillStation.type) {
+                                FillStationType.PUBLIC -> publicIcon
+                                FillStationType.PRIVATE -> privateIcon
+                            }
+                        )
+                )
+            }
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(campus.center, 16.0f))
+        }
+    }
+
+    private fun startDirections(destination: LatLng) {
+        val gmmIntentUri = Uri.parse("google.navigation:q=" + destination.latitude + "," + destination.longitude + "&mode=w")
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps")
+        startActivity(mapIntent)
     }
 }

@@ -3,17 +3,17 @@ package com.hydration
 import android.content.Context
 import com.google.android.gms.maps.model.LatLng
 
-const val FILL_STATIONS_DIRNAME = "stations"
+const val CAMPUS_DIRNAME = "campus"
 
-class FillStationManager(context: Context) {
-    val fillStations: List<FillStation>
+class CampusManager(context: Context) {
+    val campuses: List<Campus>
 
     init {
         val assetsManager = context.assets!!
-        fillStations = assetsManager.list(FILL_STATIONS_DIRNAME)!!
+        campuses = assetsManager.list(CAMPUS_DIRNAME)!!
             .map { filename ->
-                val reader = CSVReader(assetsManager.open("$FILL_STATIONS_DIRNAME/$filename"))
-                reader.rows.mapIndexed { i, row ->
+                val reader = CSVReader(assetsManager.open("$CAMPUS_DIRNAME/$filename"))
+                val fillStations = reader.rows.mapIndexed { i, row ->
                     val name = "${filename.split(".")[0]}-$i"
                     val lat = row[0].toDouble()
                     val lng = row[1].toDouble()
@@ -24,6 +24,9 @@ class FillStationManager(context: Context) {
                     }
                     FillStation(name, LatLng(lat, lng), type)
                 }
-            }.flatten()
+                Campus(fillStations)
+            }
     }
+
+    fun getClosestCampus(location: LatLng) = campuses.minBy { it.center.distanceTo(location) }!!
 }
