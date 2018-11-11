@@ -36,14 +36,17 @@ class NotificationService : Service() {
         val apiClient = StdLibClient.createClient()
         // TODO
         if (apiClient.getDehydrationLevel() < 10.0) {
+            val notifIntent = Intent(this, MainActivity::class.java)
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, notifIntent, 0)
+
             createNotificationChannel()
 
             val notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.water)
                 .setContentTitle("Drink Up!")
-                .setContentText("Based on your recent activity, we recommend you drink a glass of water to rehydrate. " +
-                        "The closest fill-up station is " + " minutes away")
+                .setContentText("Based on your recent activity, we recommend you drink a glass of water to rehydrate.")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
                 .build()
 
             with(NotificationManagerCompat.from(this)) {

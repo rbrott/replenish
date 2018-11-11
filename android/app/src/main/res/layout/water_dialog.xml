@@ -9,8 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAlignment="center"
-        android:layout_margin="8dp"
-        android:textSize="28dp"
+        android:layout_margin="4dp"
+        android:textSize="16dp"
         android:text="Water Input" />
 
 
@@ -18,7 +18,7 @@
         android:id="@+id/waterTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:layout_margin="4dp"
         android:textAlignment="center"
         android:textSize="24dp"
         android:text="0oz" />
