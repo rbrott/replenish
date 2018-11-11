@@ -8,8 +8,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import com.fitbit.authentication.AuthenticationHandler
+import com.fitbit.authentication.AuthenticationManager
+import com.fitbit.authentication.AuthenticationResult
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -25,7 +29,7 @@ import kotlinx.android.synthetic.main.content_main.*
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, AuthenticationHandler {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var campusManager: CampusManager
     private lateinit var campus: Campus
@@ -61,6 +65,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_FINE_LOCATION, true);
         } else {
             findCurrentLocation()
+        }
+
+        AuthenticationManager.login(this)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data);
+        AuthenticationManager.onActivityResult(requestCode, resultCode, data, this as AuthenticationHandler)
+    }
+
+    override fun onAuthFinished(authenticationResult: AuthenticationResult) {
+        if (authenticationResult.isSuccessful) {
+            Log.i("Replenish", "auth successful")
+            //WOOT WOOT!! It worked!
+        } else {
+            //Uh oh... errors...
         }
     }
 

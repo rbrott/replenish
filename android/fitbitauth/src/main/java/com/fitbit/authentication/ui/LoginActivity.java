@@ -1,13 +1,5 @@
 package com.fitbit.authentication.ui;
 
-import com.fitbit.authentication.AuthenticationHandler;
-import com.fitbit.authentication.AuthenticationResult;
-import com.fitbit.authentication.AuthorizationController;
-import com.fitbit.authentication.ClientCredentials;
-import com.fitbit.authentication.Scope;
-import com.fitbit.fitbitauth.R;
-import com.fitbit.fitbitauth.databinding.ActivityLoginBinding;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -15,11 +7,12 @@ import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-
-import com.android.annotations.Nullable;
-
+import com.fitbit.authentication.*;
+import com.fitbit.fitbitauth.R;
+import com.fitbit.fitbitauth.databinding.ActivityLoginBinding;
 import java.util.HashSet;
 import java.util.Set;
 
